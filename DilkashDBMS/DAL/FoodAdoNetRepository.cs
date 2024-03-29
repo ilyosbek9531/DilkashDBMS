@@ -2,11 +2,21 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
+using Dapper;
 
 namespace DilkashDBMS.DAL
 {
     public class FoodAdoNetRepository : IFoodRepository
     {
+        private const string SQL_FILTER = @"SELECT FoodId, FoodName, FoodDescription, FoodImage, FoodType, Availability, Price, CreatedAt,
+                                                COUNT(*) OVER () AS TotalCount
+                                            FROM Food
+                                            WHERE (FoodName LIKE COALESCE(@FoodName, '') + '%' OR @FoodName IS NULL)
+                                                AND (CreatedAt = COALESCE(@CreatedAt, '1900-01-01') OR @CreatedAt IS NULL)
+                                            ORDER BY {0}
+                                            OFFSET (@PageNumber - 1) * @PageSize ROWS
+                                            FETCH NEXT @PageSize ROWS ONLY";
+
         private readonly string _connStr;
 
         public FoodAdoNetRepository(string connStr)
@@ -147,6 +157,31 @@ namespace DilkashDBMS.DAL
                     throw new Exception($"Food does not exists,id={id}");            
             }
                 
+        }
+
+        public IEnumerable<Food> Filter(out int totalCount, string? foodName = null, DateTime? createdAt = null, string? sortColumn = "FoodId", bool sortDesc = false, int pageNumber = 1, int pageSize = 3)
+        {
+            if (pageNumber <= 0) pageNumber = 1;
+
+            string orderBy = nameof(Food.FoodId);
+            if (nameof(Food.FoodName).Equals(sortColumn))
+                orderBy = nameof(Food.FoodName);
+
+            string sql = string.Format(SQL_FILTER, $"{orderBy} {(sortDesc ? "DESC" : "ASC")}");
+
+            using var conn = new SqlConnection(_connStr);
+            var list = conn.Query<Food>(sql,
+                new
+                {
+                    FoodName = foodName,
+                    CreatedAt = createdAt,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+
+                }
+                );
+            totalCount = list?.FirstOrDefault()?.TotalCount ?? 0;
+            return list ?? Enumerable.Empty<Food>();
         }
     }
 }

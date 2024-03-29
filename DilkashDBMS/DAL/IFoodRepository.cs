@@ -10,5 +10,15 @@ namespace DilkashDBMS.DAL
         int Insert(Food food);
         void Update(Food food);
         void Delete(int id);
+
+        IEnumerable<Food> Filter(
+            out int totalCount,
+            string? foodName = null,
+            DateTime? createdAt = null,
+            string? sortColumn = nameof(Food.FoodId),
+            bool sortDesc = false,
+            int pageNumber = 1,
+            int pageSize = 4
+            );
     }
 }

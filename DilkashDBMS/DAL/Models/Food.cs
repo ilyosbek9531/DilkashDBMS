@@ -10,5 +10,6 @@
         public required bool Availability { get; set; }
         public required int Price { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public int TotalCount { get; set; }
     }
 }
