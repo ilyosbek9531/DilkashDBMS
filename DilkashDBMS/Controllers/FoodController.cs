@@ -53,6 +53,7 @@ namespace DilkashDBMS.Controllers
                         foodObj.FoodImage = memory.ToArray();
                     }
                 }
+
                 var id = _foodRepository.Insert(foodObj);
                 return RedirectToAction("Details", new { id = id });
             }

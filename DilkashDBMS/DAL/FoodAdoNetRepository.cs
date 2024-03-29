@@ -121,7 +121,24 @@ namespace DilkashDBMS.DAL
 
         public void Update(Food food)
         {
-            throw new NotImplementedException();
+            using var conn = new SqlConnection(_connStr);
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "udpUpdateEmployee";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@FirstName", emp.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", emp.LastName);
+            cmd.Parameters.AddWithValue("@ProfilePicture", emp.ProfilePicture ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@Position", emp.Position);
+            cmd.Parameters.AddWithValue("@Salary", emp.Salary ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@ContactNumber", emp.ContactNumber ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@HireDate", emp.HireDate);
+            cmd.Parameters.AddWithValue("@IsActive", emp.IsActive);
+            cmd.Parameters.AddWithValue("@EmployeeID", emp.EmployeeID);
+
+            conn.Open();
+            int updatedCount = cmd.ExecuteNonQuery();
+            if (updatedCount == 0)
+                throw new Exception($"Employee does not exists!, {emp.EmployeeID}");
         }
         public void Delete(int id)
         {
