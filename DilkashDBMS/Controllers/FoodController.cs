@@ -141,6 +141,7 @@ namespace DilkashDBMS.Controllers
             filterModel.Foods = _foodRepository.Filter(
                 out totalCount,
                 filterModel.FoodName,
+                filterModel.FoodType,
                 filterModel.CreatedAt,
                 filterModel.SortColumn,
                 filterModel.SortDesc,

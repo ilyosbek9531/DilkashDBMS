@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DilkashDBMS.DAL.Models.Food>
+﻿@model DilkashDBMS.Models.FoodFilterModel
 
 @{
     ViewData["Title"] = "Filter";
@@ -6,78 +6,112 @@
 
 <h1>Filter</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="row">
+    <div class="col-md-4" style="width: 100%">
+        <form asp-action="Filter" method="get" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px">
+                <div class="form-group" style="flex: 1;">
+                    <label asp-for="FoodName" class="control-label"></label>
+                    <input asp-for="FoodName" class="form-control" />
+                    <span asp-validation-for="FoodName" class="text-danger"></span>
+                </div>
+                <div class="form-group" style="flex: 1">
+                    <label asp-for="FoodType" class="control-label"></label>
+                    <select asp-for="FoodType" class="form-control">
+                        <option value="" selected>All</option>
+                        <option value="Drinks">Drinks</option>
+                        <option value="Desserts">Desserts</option>
+                        <option value="Salads">Salads</option>
+                        <option value="Meals">Meals</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1">
+                    <label asp-for="CreatedAt" class="control-label"></label>
+                    <input asp-for="CreatedAt" class="form-control" />
+                    <span asp-validation-for="CreatedAt" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 30px">
+                <input type="submit" value="Filter" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.FoodId)
+                @Html.ActionLink("FoodName", "Filter", new { SortColumn = "FoodName", SortDesc = !Model.SortDesc })
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FoodName)
+                @Html.DisplayNameFor(model => model.Foods.First().FoodDescription)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FoodDescription)
+                @Html.DisplayNameFor(model => model.Foods.First().FoodImage)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FoodImage)
+                @Html.DisplayNameFor(model => model.Foods.First().FoodType)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FoodType)
+                @Html.DisplayNameFor(model => model.Foods.First().Availability)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Availability)
+                @Html.DisplayNameFor(model => model.Foods.First().Price)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalCount)
+                @Html.DisplayNameFor(model => model.Foods.First().CreatedAt)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.FoodId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FoodName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FoodDescription)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FoodImage)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FoodType)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Availability)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TotalCount)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-                @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Foods)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FoodName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FoodDescription)
+                </td>
+                <td>
+                    @if (item.FoodImage != null)
+                    {
+                        <img src="data:image;base64,@Convert.ToBase64String(item.FoodImage)" alt="Food Image" />
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FoodType)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Availability)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Price)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedAt)
+                </td>
+                <td>
+                    @Html.ActionLink("Edit", "Edit", new { id = item.FoodId }) |
+                    @Html.ActionLink("Details", "Details", new { id = item.FoodId }) |
+                    @Html.ActionLink("Delete", "Delete", new { id = item.FoodId })
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+
+@Html.ActionLink("Prev", "Filter", new { Page = Model.Page - 1 })
+@for (int p = 1; p <= Model.TotalPages; p++)
+{
+    @Html.ActionLink($"{p}", "Filter", new { Page = p })
+}
+
+@Html.ActionLink("Next", "Filter", new { Page = Model.Page + 1 })

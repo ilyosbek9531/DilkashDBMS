@@ -110,3 +110,41 @@ BEGIN
     END CATCH
 END
 GO
+
+
+--------------- Filter ---------------------------------
+GO
+CREATE OR ALTER PROCEDURE udpFilters
+    @FoodName NVARCHAR(MAX) = NULL,
+    @FoodType NVARCHAR(MAX) = NULL,
+    @CreatedAt DATETIME = NULL,
+    @SortColumn NVARCHAR(MAX) = 'FoodId',
+    @SortDesc BIT = 0,
+    @PageNumber INT = 1,
+    @PageSize INT = 3,
+    @TotalCount INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @OrderBy NVARCHAR(MAX);
+
+    IF @SortColumn = 'FoodName'
+        SET @OrderBy = 'f.FoodName ' + CASE WHEN @SortDesc = 1 THEN 'DESC' ELSE 'ASC' END;
+    ELSE
+        SET @OrderBy = 'f.FoodId ' + CASE WHEN @SortDesc = 1 THEN 'DESC' ELSE 'ASC' END;
+
+    SELECT f.FoodId, f.FoodName, f.FoodDescription, f.FoodImage, f.FoodType, f.Availability, f.Price, f.CreatedAt,
+           COUNT(*) OVER () AS TotalCount
+    FROM Food f
+    LEFT JOIN OrderItems oi ON f.FoodId = oi.FoodId
+    LEFT JOIN [Order] o ON oi.OrderId = o.OrderId
+    WHERE (FoodName LIKE '%' + COALESCE(@FoodName, '') + '%' OR @FoodName IS NULL)
+      AND (f.FoodType = @FoodType OR @FoodType IS NULL)
+      AND (f.CreatedAt = COALESCE(@CreatedAt, '1900-01-01') OR @CreatedAt IS NULL)
+    ORDER BY @OrderBy
+    OFFSET (@PageNumber - 1) * @PageSize ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
+
+    SET @TotalCount = @@ROWCOUNT;
+END;

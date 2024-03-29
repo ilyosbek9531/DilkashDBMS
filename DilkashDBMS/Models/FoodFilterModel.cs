@@ -13,6 +13,7 @@ namespace DilkashDBMS.Models
             }
         }
         public string? FoodName { get; set; }
+        public required string FoodType { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string? SortColumn { get; set; }
         public bool SortDesc { get; set; }

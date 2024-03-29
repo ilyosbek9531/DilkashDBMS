@@ -3,20 +3,13 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using Dapper;
+using NuGet.Protocol;
+using System.Collections.Generic;
 
 namespace DilkashDBMS.DAL
 {
     public class FoodAdoNetRepository : IFoodRepository
     {
-        private const string SQL_FILTER = @"SELECT FoodId, FoodName, FoodDescription, FoodImage, FoodType, Availability, Price, CreatedAt,
-                                                COUNT(*) OVER () AS TotalCount
-                                            FROM Food
-                                            WHERE (FoodName LIKE COALESCE(@FoodName, '') + '%' OR @FoodName IS NULL)
-                                                AND (CreatedAt = COALESCE(@CreatedAt, '1900-01-01') OR @CreatedAt IS NULL)
-                                            ORDER BY {0}
-                                            OFFSET (@PageNumber - 1) * @PageSize ROWS
-                                            FETCH NEXT @PageSize ROWS ONLY";
-
         private readonly string _connStr;
 
         public FoodAdoNetRepository(string connStr)
@@ -156,32 +149,52 @@ namespace DilkashDBMS.DAL
             if (updatedCount==0) {
                     throw new Exception($"Food does not exists,id={id}");            
             }
-                
         }
 
-        public IEnumerable<Food> Filter(out int totalCount, string? foodName = null, DateTime? createdAt = null, string? sortColumn = "FoodId", bool sortDesc = false, int pageNumber = 1, int pageSize = 3)
+        public IEnumerable<Food> Filter(out int totalCount, string? foodName = null, string? foodType = null, DateTime? createdAt = null, string? sortColumn = "FoodId", bool sortDesc = false, int pageNumber = 1, int pageSize = 3)
         {
+            var list = new List<Food>();
             if (pageNumber <= 0) pageNumber = 1;
 
-            string orderBy = nameof(Food.FoodId);
-            if (nameof(Food.FoodName).Equals(sortColumn))
-                orderBy = nameof(Food.FoodName);
-
-            string sql = string.Format(SQL_FILTER, $"{orderBy} {(sortDesc ? "DESC" : "ASC")}");
-
             using var conn = new SqlConnection(_connStr);
-            var list = conn.Query<Food>(sql,
-                new
-                {
-                    FoodName = foodName,
-                    CreatedAt = createdAt,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "udpFilters";
+            cmd.CommandType = CommandType.StoredProcedure;
 
-                }
-                );
-            totalCount = list?.FirstOrDefault()?.TotalCount ?? 0;
-            return list ?? Enumerable.Empty<Food>();
+            cmd.Parameters.AddWithValue("@FoodName", foodName);
+            cmd.Parameters.AddWithValue("@FoodType", foodType);
+            cmd.Parameters.AddWithValue("@CreatedAt", createdAt);
+            cmd.Parameters.AddWithValue("@SortColumn", sortColumn);
+            cmd.Parameters.AddWithValue("@SortDesc", sortDesc);
+            cmd.Parameters.AddWithValue("@PageNumber", pageNumber);
+            cmd.Parameters.AddWithValue("@PageSize", pageSize);
+
+            var totalCountParam = new SqlParameter("@TotalCount", SqlDbType.Int);
+            totalCountParam.Direction = ParameterDirection.Output;
+            cmd.Parameters.Add(totalCountParam);
+
+            conn.Open();
+            using var rdr = cmd.ExecuteReader();
+
+            while (rdr.Read())
+            {
+                var food = new Food()
+                {
+                    FoodId = rdr.GetInt32("FoodId"),
+                    FoodName = rdr.GetString("FoodName"),
+                    FoodDescription = rdr.IsDBNull("FoodDescription") ? null : rdr.GetString("FoodDescription"),
+                    FoodImage = rdr.IsDBNull(rdr.GetOrdinal("FoodImage")) ? null : (byte[])rdr["FoodImage"],
+                    FoodType = rdr.GetString("FoodType"),
+                    Availability = rdr.GetBoolean("Availability"),
+                    Price = rdr.GetInt32("Price"),
+                    CreatedAt = rdr.IsDBNull("CreatedAt") ? null : rdr.GetDateTime("CreatedAt"),
+                };
+                list.Add(food);
+            }
+            totalCount = Convert.ToInt32(totalCountParam.Value);
+            return list;
         }
+
+
     }
 }

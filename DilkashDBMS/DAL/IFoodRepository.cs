@@ -14,6 +14,7 @@ namespace DilkashDBMS.DAL
         IEnumerable<Food> Filter(
             out int totalCount,
             string? foodName = null,
+            string? foodType = null,
             DateTime? createdAt = null,
             string? sortColumn = nameof(Food.FoodId),
             bool sortDesc = false,
