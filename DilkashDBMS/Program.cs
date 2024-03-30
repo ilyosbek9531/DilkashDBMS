@@ -4,8 +4,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 IConfiguration config = builder.Configuration;
 
+string connStr = config.GetConnectionString("Dilkash")
+    .Replace("|DataDirectory|", builder.Environment.ContentRootPath);
+
 builder.Services.AddScoped<IFoodRepository>(
-    x => new FoodAdoNetRepository(config.GetConnectionString("Dilkash"))
+    x => new FoodAdoNetRepository(connStr)
     );
 
 // Add services to the container.

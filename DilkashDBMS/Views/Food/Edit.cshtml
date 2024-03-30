@@ -1,0 +1,72 @@
+﻿@model DilkashDBMS.DAL.Models.FoodViewModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>FoodViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="FoodId" />
+            <div class="form-group">
+                <label asp-for="FoodName" class="control-label"></label>
+                <input asp-for="FoodName" class="form-control" />
+                <span asp-validation-for="FoodName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FoodDescription" class="control-label"></label>
+                <input asp-for="FoodDescription" class="form-control" />
+                <span asp-validation-for="FoodDescription" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ImageFile" class="control-label"></label>
+                <!-- Display the current profile picture -->
+                <img src="@Url.Action("ShowPhoto", "Food", new { id = Model.FoodId })" alt="Profile Picture" style="max-width: 200px;" />
+                <!-- Allow user to upload a new profile picture -->
+                <input type="file" name="imageFile" class="form-control" />
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FoodType" class="control-label"></label>
+                <select asp-for="FoodType" class="form-control">
+                    <option value="Drinks" selected="Model.FoodType == 'Drinks'">Drinks</option>
+                    <option value="Desserts" selected="Model.FoodType == 'Desserts'">Desserts</option>
+                    <option value="Salads" selected="Model.FoodType == 'Salads'">Salads</option>
+                    <option value="Meals" selected="Model.FoodType == 'Meals'">Meals</option>
+                </select>
+                <span asp-validation-for="FoodType" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="Availability" /> @Html.DisplayNameFor(model => model.Availability)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Price" class="control-label"></label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreatedAt" class="control-label"></label>
+                <input asp-for="CreatedAt" class="form-control" />
+                <span asp-validation-for="CreatedAt" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

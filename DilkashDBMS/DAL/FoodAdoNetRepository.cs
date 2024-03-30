@@ -20,7 +20,8 @@ namespace DilkashDBMS.DAL
 
             using var conn = new SqlConnection(_connStr);
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "select * from Food";
+            cmd.CommandText = "udpGetAllFoods";
+            cmd.CommandType = CommandType.StoredProcedure;
             conn.Open();
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
@@ -34,7 +35,7 @@ namespace DilkashDBMS.DAL
                     FoodType = rdr.GetString("FoodType"),
                     Availability = rdr.GetBoolean("Availability"),
                     Price = rdr.GetInt32("Price"),
-                    CreatedAt = rdr.GetDateTime("CreatedAt"),
+                    CreatedAt = rdr.IsDBNull("CreatedAt") ? null : rdr.GetDateTime("CreatedAt"),
                 };
                 list.Add(food);
             }
@@ -69,15 +70,9 @@ namespace DilkashDBMS.DAL
         {
             using var conn = new SqlConnection(_connStr);
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"select * from Food
-                                where FoodId = @FoodId";
-
-            var pId = cmd.CreateParameter();
-            pId.ParameterName = "@FoodId";
-            pId.Value = id;
-            pId.DbType = DbType.Int32;
-            pId.Direction = ParameterDirection.Input;
-            cmd.Parameters.Add(pId);
+            cmd.CommandText = "udpGetFoodById";
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@FoodId", id);
 
             conn.Open();
             using var rdr = cmd.ExecuteReader();
@@ -92,7 +87,7 @@ namespace DilkashDBMS.DAL
                     FoodType =  rdr.GetFieldValue<string>("FoodType"),
                     Availability =  rdr.GetFieldValue<bool>("Availability"),
                     Price =  rdr.GetFieldValue<int>("Price"),
-                    CreatedAt =  rdr.GetFieldValue<DateTime>("CreatedAt"),
+                    CreatedAt = rdr.IsDBNull("CreatedAt") ? null : rdr.GetFieldValue<DateTime>("CreatedAt"),
                 };
             }
 
@@ -103,9 +98,8 @@ namespace DilkashDBMS.DAL
         {
             using var conn = new SqlConnection(_connStr);
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"insert into Food(FoodName, FoodDescription, FoodImage, FoodType, Availability, Price, CreatedAt)
-                                output inserted.FoodId
-                                values (@FoodName, @FoodDescription, @FoodImage, @FoodType, @Availability, @Price, @CreatedAt)";
+            cmd.CommandText = "udpInsertFood";
+            cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@FoodName", food.FoodName);
             cmd.Parameters.AddWithValue("@FoodDescription", food.FoodDescription ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@FoodImage", (object)food.FoodImage ?? SqlBinary.Null);
@@ -121,30 +115,31 @@ namespace DilkashDBMS.DAL
 
         public void Update(Food food)
         {
+
             using var conn = new SqlConnection(_connStr);
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "udpUpdateEmployee";
+            cmd.CommandText = "udpUpdateFood";
             cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("@FirstName", emp.FirstName);
-            cmd.Parameters.AddWithValue("@LastName", emp.LastName);
-            cmd.Parameters.AddWithValue("@ProfilePicture", emp.ProfilePicture ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@Position", emp.Position);
-            cmd.Parameters.AddWithValue("@Salary", emp.Salary ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@ContactNumber", emp.ContactNumber ?? (object)DBNull.Value);
-            cmd.Parameters.AddWithValue("@HireDate", emp.HireDate);
-            cmd.Parameters.AddWithValue("@IsActive", emp.IsActive);
-            cmd.Parameters.AddWithValue("@EmployeeID", emp.EmployeeID);
+            cmd.Parameters.AddWithValue("@FoodId", food.FoodId);
+            cmd.Parameters.AddWithValue("@FoodName", food.FoodName);
+            cmd.Parameters.AddWithValue("@FoodDescription", food.FoodDescription ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@FoodImage", (object)food.FoodImage ?? SqlBinary.Null);
+            cmd.Parameters.AddWithValue("@FoodType", food.FoodType);
+            cmd.Parameters.AddWithValue("@Availability", food.Availability);
+            cmd.Parameters.AddWithValue("@Price", food.Price);
+            cmd.Parameters.AddWithValue("@CreatedAt", food.CreatedAt ?? (object)DBNull.Value);
 
             conn.Open();
             int updatedCount = cmd.ExecuteNonQuery();
             if (updatedCount == 0)
-                throw new Exception($"Employee does not exists!, {emp.EmployeeID}");
+                throw new Exception($"Food does not exists!, {food.FoodId}");
         }
         public void Delete(int id)
         {
             using var conn=new SqlConnection(_connStr);
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"delete from Food where FoodId=@FoodId ";
+            cmd.CommandText = "udpDeleteFood";
+            cmd.CommandType = CommandType.StoredProcedure;
             cmd.Parameters.AddWithValue("@FoodId",id);
             conn.Open( );
             int updatedCount = cmd.ExecuteNonQuery();

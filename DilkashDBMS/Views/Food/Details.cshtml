@@ -32,7 +32,14 @@
             @Html.DisplayNameFor(model => model.FoodImage)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FoodImage)
+            @if (Model.FoodImage != null && Model.FoodImage.Length > 0)
+            {
+            <img src="@Url.Action("ShowPhoto", "Food", new { id = Model.FoodId })" alt="Food Image" style="max-width: 200px;" />
+            }
+            else
+            {
+                <span>No Image</span>
+            }
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.FoodType)

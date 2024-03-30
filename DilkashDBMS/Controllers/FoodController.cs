@@ -30,6 +30,61 @@ namespace DilkashDBMS.Controllers
             return View();
         }
 
+        public IActionResult Edit(int id)
+        {
+            Food? food = _foodRepository.GetById(id);
+            FoodViewModel foodObj = new FoodViewModel
+            {
+                FoodId = food.FoodId,
+                FoodName = food.FoodName,
+                FoodDescription = food.FoodDescription,
+                FoodImage = food.FoodImage,
+                FoodType = food.FoodType,
+                Availability =food.Availability,
+                Price = food.Price,
+                CreatedAt = food.CreatedAt,
+                ImageFile = null
+            };
+            return View(foodObj);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(FoodViewModel food)
+        {
+            try
+            {
+                Food foodObj = new Food
+                {
+                    FoodId = food.FoodId,
+                    FoodName = food.FoodName,
+                    FoodDescription = food.FoodDescription,
+                    FoodImage = food.FoodImage,
+                    FoodType = food.FoodType,
+                    Availability = food.Availability,
+                    Price = food.Price,
+                    CreatedAt = food.CreatedAt,
+                };
+
+                if (food.ImageFile != null)
+                {
+                    using (var memory = new MemoryStream())
+                    {
+                        food.ImageFile.CopyTo(memory);
+                        foodObj.FoodImage = memory.ToArray();
+                    }
+                }
+                _foodRepository.Update(foodObj);
+                return RedirectToAction("Details", new { id = food.FoodId });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View(food);
+            }
+        }
+
+
+
         [HttpPost]
         public IActionResult Create(FoodViewModel food)
         {
